@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Affairs & Human Rights Study Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .card-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+        }
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes star-fly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .star-blue {
+            position: absolute;
+            color: #2563eb;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 100;
+            animation: star-fly 0.8s ease-out forwards;
+        }
+
+        @keyframes starburst {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.8) rotate(180deg); opacity: 0.9; }
+            100% { transform: scale(3) rotate(360deg); opacity: 0; }
+        }
+        .starburst-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+        }
+        .starburst-pink {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #db2777 30%, transparent 70%);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: starburst 0.8s ease-out forwards;
+        }
+
+        /* Match Card Styles */
+        .match-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        .match-card:hover:not(.matched) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .selected {
+            border-color: #0f172a !important;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.2);
+            transform: scale(1.05);
+        }
+        .matched {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            height: 0;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Match Mode - High Contrast */
+        .card-en {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+        }
+        .card-no {
+            background-color: #dcfce7;
+            border-color: #10b981;
+            color: #064e3b;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background-color: #db2777;
+            width: 100%;
+        }
+
+        .mode-btn-active {
+            background-color: #0f172a;
+            color: white;
+            border-color: #0f172a;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white p-6 shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-pink-400">Global Affairs & Rights</h1>
+                <p class="text-slate-400 text-sm">Interactive Study Tool</p>
+            </div>
+            <div id="score-display" class="hidden text-right">
+                <div class="text-xs uppercase tracking-wider text-slate-400" id="score-label">Progress</div>
+                <div class="text-xl font-mono" id="progress-count">0 / 26</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-8">
+        
+        <!-- Welcome Screen -->
+        <div id="view-start" class="space-y-8 py-10">
+            <div class="text-center space-y-4">
+                <h2 class="text-3xl font-bold text-slate-800">Practice Your Concepts</h2>
+                <p class="text-slate-600 max-w-xl mx-auto text-lg">Master the vocabulary of Human Rights and Global Conflict with 26 key terms.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <button onclick="startGame('match')" class="card-gradient border border-slate-200 p-8 rounded-2xl text-left hover:border-blue-400 transition-all group shadow-sm">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Bilingual Match</h3>
+                    <p class="text-slate-500 text-sm">Match blue English boxes with green Norwegian boxes.</p>
+                </button>
+
+                <button onclick="startGame('quiz')" class="card-gradient border border-slate-200 p-8 rounded-2xl text-left hover:border-pink-400 transition-all group shadow-sm">
+                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-pink-600 group-hover:text-white transition-colors text-pink-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Definition Quiz</h3>
+                    <p class="text-slate-500 text-sm">Read definitions and select terms. Configure mode and timer inside.</p>
+                </button>
+            </div>
+
+            <div class="mt-12">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Vocabulary Reference</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900 text-white uppercase text-xs tracking-widest">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">English</th>
+                                <th class="px-4 py-3 font-bold">Norwegian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocab-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Game View -->
+        <div id="view-match" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="exitGame()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold">
+                    ← Exit to Menu
+                </button>
+                <div class="text-sm font-medium text-slate-500 italic bg-white px-3 py-1 rounded-full border border-slate-200">
+                    Match blue English to green Norwegian
+                </div>
+            </div>
+            <div id="match-container" class="grid grid-cols-2 gap-4 md:gap-8 relative">
+                <div id="match-left-col" class="space-y-3"></div>
+                <div id="match-right-col" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Quiz View -->
+        <div id="view-quiz" class="hidden">
+             <div class="flex justify-between items-center mb-6">
+                <button onclick="exitGame()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold">
+                    ← Exit to Menu
+                </button>
+                <div id="timer-ui" class="hidden flex items-center gap-2 font-mono text-pink-600 bg-pink-50 px-4 py-1 rounded-full border border-pink-100">
+                    <span id="timer-text">10.0s</span>
+                </div>
+            </div>
+
+            <!-- Quiz Setup Screen -->
+            <div id="quiz-setup" class="max-w-md mx-auto py-10 text-center space-y-6">
+                <h3 class="text-2xl font-bold text-slate-800">Quiz Configuration</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="mode-competition" onclick="selectQuizMode('competition')" class="p-4 border-2 rounded-xl text-sm font-bold mode-btn-active transition-all">
+                        Competition Mode<br><span class="font-normal text-xs">One chance, final score</span>
+                    </button>
+                    <button id="mode-practice" onclick="selectQuizMode('practice')" class="p-4 border-2 rounded-xl text-sm font-bold border-slate-200 transition-all">
+                        Practice Mode<br><span class="font-normal text-xs">Re-appear until correct</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-center gap-4 py-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                    <span class="text-slate-700 font-semibold">10s Question Timer:</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="timer-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                    </label>
+                </div>
+
+                <button onclick="startQuizContent()" class="w-full bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 transition-colors shadow-lg">
+                    Start Session
+                </button>
+            </div>
+
+            <!-- Quiz Active Screen -->
+            <div id="quiz-active" class="hidden max-w-2xl mx-auto space-y-6 relative">
+                <div id="effect-overlay-quiz" class="starburst-container"></div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-slate-100 text-center relative overflow-hidden">
+                    <div id="timer-bar-container" class="absolute top-0 left-0 w-full h-1 bg-slate-100 hidden">
+                        <div id="timer-bar" class="timer-bar"></div>
+                    </div>
+                    <span id="quiz-header-label" class="text-xs uppercase tracking-widest font-bold mb-2 block transition-colors duration-500">Definition</span>
+                    <p id="quiz-question" class="text-xl font-semibold text-slate-800 leading-relaxed"></p>
+                </div>
+                <div id="quiz-options" class="grid gap-3"></div>
+                <div id="quiz-feedback" class="h-10 text-center font-bold uppercase tracking-wide"></div>
+            </div>
+        </div>
+
+        <!-- Results View -->
+        <div id="view-results" class="hidden text-center py-10 space-y-6">
+            <div class="text-7xl" id="results-icon">🏆</div>
+            <h2 class="text-4xl font-extrabold text-slate-800" id="results-title">Great Work!</h2>
+            <p class="text-slate-600 text-lg" id="results-subtitle">Course content mastered successfully.</p>
+            <div class="pt-6">
+                <button onclick="exitGame()" class="bg-slate-900 text-white px-10 py-3 rounded-full font-bold hover:bg-slate-800 transition-colors shadow-xl">Back to Menu</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const terms = [
+            { id: 1, en: "Multilateral organisations", no: "Mellomstatlige organisasjoner", def: "Organizations and alliances formed between multiple nations, such as the UN, World Bank, and NATO." },
+            { id: 2, en: "Supranational organisations", no: "Overnasjonale organisasjoner", def: "Organizations where member countries cede some authority and sovereignty to a body that can make binding decisions (e.g., EU, WTO)." },
+            { id: 3, en: "International non-governmental organisations (INGO)", no: "Ikke-statlige organisasjoner", def: "Non-profit groups independent of governments that work internationally, such as Amnesty, Red Cross, or Save the Children." },
+            { id: 4, en: "UN (United Nations)", no: "FN (Forente Nasjoner)", def: "An international organization founded in 1945 to maintain international peace and security and promote human rights." },
+            { id: 5, en: "NATO", no: "NATO (Atlanterhavspakten)", def: "A military alliance of European and North American countries to provide collective security against aggression." },
+            { id: 6, en: "EU (European Union)", no: "EU (Den europeiske union)", def: "A supranational political and economic union of European states." },
+            { id: 7, en: "WTO (World Trade Organization)", no: "WTO (Verdens handelsorganisasjon)", def: "An international body that regulates and facilitates international trade between nations." },
+            { id: 8, en: "Conflict", no: "Konflikt", def: "A lasting disagreement about interests, values, and resources between individuals, groups, or countries." },
+            { id: 9, en: "Mediation", no: "Megling", def: "A method of solving conflicts where a neutral third party intervenes to help reach an agreement." },
+            { id: 10, en: "War", no: "Krig", def: "Organized violent conflict where at least two parties encourage violence, or a conflict involving a country where at least 1,000 people are killed in a year." },
+            { id: 11, en: "Conventional war", no: "Konvensjonell krig", def: "A form of warfare conducted by using regular military weapons and battlefield tactics between states." },
+            { id: 12, en: "Civil war", no: "Borgerkrig", def: "A war between organized groups within the same state or country." },
+            { id: 13, en: "Proxy war", no: "Stedfortrederkrig", def: "A conflict where major powers support different sides in a war rather than fighting each other directly." },
+            { id: 14, en: "Terrorism", no: "Terrorisme", def: "The unlawful use of violence and intimidation, especially against civilians, in the pursuit of political or ideology aims." },
+            { id: 15, en: "Genocide", no: "Folkemord", def: "The deliberate killing of a large number of people from a particular nation or ethnic group with the aim of destroying them." },
+            { id: 16, en: "Great powers", no: "Stormakter", def: "Countries that possess significant economic, military, and political power compared to others." },
+            { id: 17, en: "Superpowers", no: "Supermakter", def: "States so influential that no significant action can be taken by the global community without first considering their positions." },
+            { id: 18, en: "Hegemony", no: "Hegemoni", def: "Military, economic, or cultural domination of one state or group over others." },
+            { id: 19, en: "Human rights", no: "Menneskerettigheter", def: "Fundamental rights and freedoms that belong to every person, regardless of nationality or belief." },
+            { id: 20, en: "Civil rights", no: "Borgerrettigheter", def: "rights of equality and social and political freedom given to citizens of a country" },
+            { id: 21, en: "Inalienable rights", no: "Umistelige rettigheter", def: "Rights that are inherent to all members of the human family and cannot be taken away." },
+            { id: 22, en: "Rule of law", no: "Rettsstat / Lov og rett", def: "The principle that human rights should be protected by law and that everyone is subject to the law." },
+            { id: 23, en: "Absolute rights", no: "Absolutte rettigheter", def: "Human rights that can never be interfered with by the state under any circumstances." },
+            { id: 24, en: "Limited rights", no: "Begrensede rettigheter", def: "Rights that can be interfered with by the state in certain specific circumstances." },
+            { id: 25, en: "Qualified rights", no: "Kvalifiserte rettigheter", def: "Rights that can be interfered with to protect the rights of others or the public interest." },
+            { id: 26, en: "Sovereignty", no: "Suverenitet", def: "The authority of a state to govern itself and make its own decisions without external interference." }
+        ];
+
+        let state = {
+            mode: null,
+            quizSubMode: 'competition',
+            score: 0,
+            total: 26,
+            selectedId: null,
+            selectedSide: null,
+            quizRemaining: [],
+            timerEnabled: false,
+            timeLeft: 10,
+            timerInterval: null,
+            lock: false,
+            currentQuizTerm: null
+        };
+
+        const pastelColors = [
+            { bg: "bg-pink-100", border: "border-pink-300", text: "text-pink-950", hover: "hover:bg-pink-200", label: "text-pink-700", correct: "bg-pink-500" },
+            { bg: "bg-purple-100", border: "border-purple-300", text: "text-purple-950", hover: "hover:bg-purple-200", label: "text-purple-700", correct: "bg-purple-500" },
+            { bg: "bg-yellow-100", border: "border-yellow-400", text: "text-yellow-950", hover: "hover:bg-yellow-200", label: "text-yellow-800", correct: "bg-yellow-500" }
+        ];
+
+        const tableBody = document.getElementById('vocab-table-body');
+        terms.forEach(t => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="px-4 py-2 font-bold text-slate-800">${t.en}</td><td class="px-4 py-2 text-slate-600 italic font-medium">${t.no}</td>`;
+            tableBody.appendChild(row);
+        });
+
+        function switchView(viewId) {
+            ['view-start', 'view-match', 'view-quiz', 'view-results'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+            document.getElementById('score-display').classList.toggle('hidden', viewId === 'view-start');
+        }
+
+        function startGame(mode) {
+            state.mode = mode;
+            state.score = 0;
+            state.total = 26;
+            updateProgress();
+            if (mode === 'match') initMatchGame();
+            else initQuizGame();
+        }
+
+        function selectQuizMode(m) {
+            state.quizSubMode = m;
+            document.getElementById('mode-competition').className = m === 'competition' ? 'p-4 border-2 rounded-xl text-sm font-bold mode-btn-active' : 'p-4 border-2 rounded-xl text-sm font-bold border-slate-200';
+            document.getElementById('mode-practice').className = m === 'practice' ? 'p-4 border-2 rounded-xl text-sm font-bold mode-btn-active' : 'p-4 border-2 rounded-xl text-sm font-bold border-slate-200';
+        }
+
+        function exitGame() {
+            clearInterval(state.timerInterval);
+            switchView('view-start');
+        }
+
+        function initMatchGame() {
+            switchView('view-match');
+            document.getElementById('score-label').textContent = 'Pairs Formed';
+            const leftCol = document.getElementById('match-left-col');
+            const rightCol = document.getElementById('match-right-col');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+            const leftItems = [...terms].sort(() => Math.random() - 0.5);
+            const rightItems = [...terms].sort(() => Math.random() - 0.5);
+            leftItems.forEach(item => leftCol.appendChild(createMatchCard(item.en, item.id, 'en')));
+            rightItems.forEach(item => rightCol.appendChild(createMatchCard(item.no, item.id, 'no')));
+        }
+
+        function createMatchCard(text, id, side) {
+            const div = document.createElement('div');
+            const colorClass = side === 'en' ? 'card-en' : 'card-no';
+            div.className = `match-card p-3 md:p-4 border-2 rounded-xl text-sm md:text-base font-bold text-center shadow-sm ${colorClass}`;
+            div.textContent = text;
+            div.dataset.id = id;
+            div.dataset.side = side;
+            div.onclick = (e) => handleMatchClick(div, e);
+            return div;
+        }
+
+        function triggerBlueStars(x, y) {
+            const container = document.getElementById('view-match');
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('div');
+                star.className = 'star-blue';
+                star.innerHTML = '★';
+                star.style.left = x + 'px';
+                star.style.top = y + 'px';
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = (Math.random() - 0.5) * 200;
+                star.style.setProperty('--tx', `${tx}px`);
+                star.style.setProperty('--ty', `${ty}px`);
+                container.appendChild(star);
+                setTimeout(() => star.remove(), 800);
+            }
+        }
+
+        function handleMatchClick(el, event) {
+            const id = parseInt(el.dataset.id);
+            const side = el.dataset.side;
+            if (state.selectedId === id && state.selectedSide === side) {
+                el.classList.remove('selected');
+                state.selectedId = null;
+                state.selectedSide = null;
+                return;
+            }
+            if (state.selectedSide === side) {
+                document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
+                el.classList.add('selected');
+                state.selectedId = id;
+                return;
+            }
+            if (state.selectedId === null) {
+                el.classList.add('selected');
+                state.selectedId = id;
+                state.selectedSide = side;
+            } else {
+                if (state.selectedId === id) {
+                    const x = event.pageX;
+                    const y = event.pageY;
+                    triggerBlueStars(x, y);
+                    document.querySelectorAll(`[data-id="${id}"]`).forEach(c => c.classList.add('matched'));
+                    state.score++;
+                    updateProgress();
+                    state.selectedId = null;
+                    state.selectedSide = null;
+                    if (state.score === state.total) showResults('Success!', 'All pairs matched correctly.', '🚀');
+                } else {
+                    const container = document.getElementById('match-container');
+                    container.classList.add('shake');
+                    setTimeout(() => container.classList.remove('shake'), 400);
+                    document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
+                    state.selectedId = null;
+                    state.selectedSide = null;
+                }
+            }
+        }
+
+        function initQuizGame() {
+            switchView('view-quiz');
+            document.getElementById('quiz-setup').classList.remove('hidden');
+            document.getElementById('quiz-active').classList.add('hidden');
+            document.getElementById('timer-ui').classList.add('hidden');
+            document.getElementById('score-display').classList.add('hidden');
+        }
+
+        function startQuizContent() {
+            state.timerEnabled = document.getElementById('timer-toggle').checked;
+            document.getElementById('quiz-setup').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+            document.getElementById('score-display').classList.remove('hidden');
+            state.quizRemaining = [...terms].sort(() => Math.random() - 0.5);
+            state.total = 26;
+            state.score = 0;
+            document.getElementById('score-label').textContent = state.quizSubMode === 'competition' ? 'Score' : 'Items Learnt';
+            updateProgress();
+            document.getElementById('timer-ui').classList.toggle('hidden', !state.timerEnabled);
+            document.getElementById('timer-bar-container').classList.toggle('hidden', !state.timerEnabled);
+            nextQuizQuestion();
+        }
+
+        function nextQuizQuestion() {
+            clearInterval(state.timerInterval);
+            if (state.quizSubMode === 'competition') {
+                if (state.quizRemaining.length === 0) {
+                    showResults('Session Over!', `Final Score: ${state.score} / ${state.total}`, state.score > 15 ? '🔥' : '📘');
+                    return;
+                }
+            } else {
+                if (state.score === state.total) {
+                    showResults('Practice Done!', 'You got everything right eventually.', '🎓');
+                    return;
+                }
+            }
+
+            state.lock = false;
+            const current = state.quizRemaining.pop();
+            state.currentQuizTerm = current;
+            
+            const questionEl = document.getElementById('quiz-question');
+            const optionsEl = document.getElementById('quiz-options');
+            const feedbackEl = document.getElementById('quiz-feedback');
+            const headerLabel = document.getElementById('quiz-header-label');
+            
+            feedbackEl.textContent = '';
+            questionEl.textContent = current.def;
+            optionsEl.innerHTML = '';
+
+            const distractors = terms.filter(t => t.id !== current.id).sort(() => Math.random() - 0.5).slice(0, 3);
+            const options = [...distractors, current].sort(() => Math.random() - 0.5);
+
+            const activeThemeIndex = Math.floor(Math.random() * pastelColors.length);
+            const activeTheme = pastelColors[activeThemeIndex];
+            headerLabel.className = `text-xs uppercase tracking-widest font-bold mb-2 block transition-colors duration-500 ${activeTheme.label}`;
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                const scheme = pastelColors[idx % pastelColors.length];
+                btn.className = `w-full text-left p-4 border-2 rounded-xl transition-all font-bold flex justify-between shadow-sm ${scheme.bg} ${scheme.border} ${scheme.text} ${scheme.hover}`;
+                btn.innerHTML = `<span>${opt.en} <span class="opacity-70 font-normal italic ml-2 text-sm">(${opt.no})</span></span><span class="opacity-50">→</span>`;
+                btn.onclick = () => { if(!state.lock) handleQuizAnswer(opt.id === current.id, btn, scheme); };
+                optionsEl.appendChild(btn);
+            });
+
+            if (state.timerEnabled) startTimer();
+        }
+
+        function startTimer() {
+            state.timeLeft = 10;
+            const bar = document.getElementById('timer-bar');
+            bar.style.transition = 'none';
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.transition = 'width 10s linear';
+                bar.style.width = '0%';
+            }, 50);
+            updateTimerDisplay();
+            state.timerInterval = setInterval(() => {
+                state.timeLeft -= 0.1;
+                updateTimerDisplay();
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timerInterval);
+                    handleQuizFailure("TIMEOUT!");
+                }
+            }, 100);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-text').textContent = Math.max(0, state.timeLeft).toFixed(1) + 's';
+        }
+
+        function handleQuizAnswer(isCorrect, btn, scheme) {
+            state.lock = true;
+            clearInterval(state.timerInterval);
+            document.getElementById('timer-bar').style.transition = 'none';
+            const options = document.getElementById('quiz-options').querySelectorAll('button');
+            options.forEach(b => b.disabled = true);
+            if (isCorrect) {
+                triggerPinkStarburst();
+                // Instead of green, use a vivid version of the current theme color
+                btn.className = `w-full text-left p-4 border-2 rounded-xl font-bold flex justify-between text-white ${scheme.correct} border-slate-900 shadow-md transform scale-[1.02]`;
+                state.score++;
+                updateProgress();
+                setTimeout(nextQuizQuestion, 1200);
+            } else {
+                btn.className = "w-full text-left p-4 border-2 rounded-xl font-bold flex justify-between bg-red-100 border-red-500 text-red-900";
+                if (state.quizSubMode === 'practice') state.quizRemaining.unshift(state.currentQuizTerm);
+                handleQuizFailure("WRONG!");
+            }
+        }
+
+        function handleQuizFailure(msg) {
+            state.lock = true;
+            const container = document.getElementById('quiz-active');
+            container.classList.add('shake');
+            document.getElementById('quiz-feedback').innerHTML = `<span class="text-red-700">${msg}</span>`;
+            setTimeout(() => {
+                container.classList.remove('shake');
+                nextQuizQuestion();
+            }, 1500);
+        }
+
+        function triggerPinkStarburst() {
+            const overlay = document.getElementById('effect-overlay-quiz');
+            const star = document.createElement('div');
+            star.className = 'starburst-pink';
+            overlay.appendChild(star);
+            setTimeout(() => star.remove(), 800);
+        }
+
+        function updateProgress() {
+            document.getElementById('progress-count').textContent = `${state.score} / ${state.total}`;
+        }
+
+        function showResults(title, subtitle, icon) {
+            document.getElementById('results-title').textContent = title;
+            document.getElementById('results-subtitle').textContent = subtitle;
+            document.getElementById('results-icon').textContent = icon;
+            switchView('view-results');
+        }
+    </script>
+</body>
+</html>
