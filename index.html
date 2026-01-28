@@ -64,7 +64,7 @@
             animation: starburst 0.8s ease-out forwards;
         }
 
-        /* Match Card Styles */
+        /* Match Card Styles - High Contrast */
         .match-card {
             transition: all 0.2s ease;
             cursor: pointer;
@@ -88,16 +88,15 @@
             padding: 0 !important;
         }
 
-        /* Match Mode - High Contrast */
         .card-en {
             background-color: #dbeafe;
             border-color: #3b82f6;
-            color: #1e3a8a;
+            color: #1e3a8a; /* Deep Blue Text */
         }
         .card-no {
             background-color: #dcfce7;
             border-color: #10b981;
-            color: #064e3b;
+            color: #064e3b; /* Deep Green Text */
         }
 
         .timer-bar {
@@ -181,8 +180,8 @@
                 <button onclick="exitGame()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold">
                     ← Exit to Menu
                 </button>
-                <div class="text-sm font-medium text-slate-500 italic bg-white px-3 py-1 rounded-full border border-slate-200">
-                    Match blue English to green Norwegian
+                <div class="text-sm font-medium text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200">
+                    Select English (Blue) then Norwegian (Green)
                 </div>
             </div>
             <div id="match-container" class="grid grid-cols-2 gap-4 md:gap-8 relative">
@@ -207,10 +206,10 @@
                 <h3 class="text-2xl font-bold text-slate-800">Quiz Configuration</h3>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <button id="mode-competition" onclick="selectQuizMode('competition')" class="p-4 border-2 rounded-xl text-sm font-bold mode-btn-active transition-all">
+                    <button id="mode-competition" onclick="selectQuizMode('competition')" class="p-4 border-2 rounded-xl text-sm font-bold mode-btn-active">
                         Competition Mode<br><span class="font-normal text-xs">One chance, final score</span>
                     </button>
-                    <button id="mode-practice" onclick="selectQuizMode('practice')" class="p-4 border-2 rounded-xl text-sm font-bold border-slate-200 transition-all">
+                    <button id="mode-practice" onclick="selectQuizMode('practice')" class="p-4 border-2 rounded-xl text-sm font-bold border-slate-200">
                         Practice Mode<br><span class="font-normal text-xs">Re-appear until correct</span>
                     </button>
                 </div>
@@ -256,6 +255,10 @@
 
     </main>
 
+    <footer class="p-6 text-center text-slate-500 text-sm border-t border-slate-100">
+        &copy; teachervibes.no
+    </footer>
+
     <script>
         const terms = [
             { id: 1, en: "Multilateral organisations", no: "Mellomstatlige organisasjoner", def: "Organizations and alliances formed between multiple nations, such as the UN, World Bank, and NATO." },
@@ -274,7 +277,7 @@
             { id: 14, en: "Terrorism", no: "Terrorisme", def: "The unlawful use of violence and intimidation, especially against civilians, in the pursuit of political or ideology aims." },
             { id: 15, en: "Genocide", no: "Folkemord", def: "The deliberate killing of a large number of people from a particular nation or ethnic group with the aim of destroying them." },
             { id: 16, en: "Great powers", no: "Stormakter", def: "Countries that possess significant economic, military, and political power compared to others." },
-            { id: 17, en: "Superpowers", no: "Supermakter", def: "States so influential that no significant action can be taken by the global community without first considering their positions." },
+            { id: 17, en: "Superpowers", no: "Supermakter", def: "States so influential that no significant action can be taken by the global community without considering their positions." },
             { id: 18, en: "Hegemony", no: "Hegemoni", def: "Military, economic, or cultural domination of one state or group over others." },
             { id: 19, en: "Human rights", no: "Menneskerettigheter", def: "Fundamental rights and freedoms that belong to every person, regardless of nationality or belief." },
             { id: 20, en: "Civil rights", no: "Borgerrettigheter", def: "rights of equality and social and political freedom given to citizens of a country" },
@@ -525,7 +528,6 @@
             options.forEach(b => b.disabled = true);
             if (isCorrect) {
                 triggerPinkStarburst();
-                // Instead of green, use a vivid version of the current theme color
                 btn.className = `w-full text-left p-4 border-2 rounded-xl font-bold flex justify-between text-white ${scheme.correct} border-slate-900 shadow-md transform scale-[1.02]`;
                 state.score++;
                 updateProgress();
